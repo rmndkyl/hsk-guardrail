@@ -1,0 +1,52 @@
+[
+ {
+  "t": "09:59:15Z",
+  "med": 0.08032500000000001,
+  "sell_eff": 0.08053540099999999,
+  "buy_eff": 0.0810556144874516,
+  "sell_edge_bps": 26.2,
+  "buy_prem_bps": 91.0,
+  "roundtrip_bps": -64.8,
+  "venue_disp_bps": 17.4
+ },
+ {
+  "t": "10:00:31Z",
+  "med": 0.080315,
+  "sell_eff": 0.08053540099999999,
+  "buy_eff": 0.0810556144874516,
+  "sell_edge_bps": 27.4,
+  "buy_prem_bps": 92.2,
+  "roundtrip_bps": -64.8,
+  "venue_disp_bps": 9.3
+ },
+ {
+  "t": "10:01:47Z",
+  "med": 0.08034,
+  "sell_eff": 0.08053540099999999,
+  "buy_eff": 0.0810556144874516,
+  "sell_edge_bps": 24.3,
+  "buy_prem_bps": 89.1,
+  "roundtrip_bps": -64.8,
+  "venue_disp_bps": 8.7
+ },
+ {
+  "t": "10:03:03Z",
+  "med": 0.080265,
+  "sell_eff": 0.08053540099999999,
+  "buy_eff": 0.0810556144874516,
+  "sell_edge_bps": 33.7,
+  "buy_prem_bps": 98.5,
+  "roundtrip_bps": -64.8,
+  "venue_disp_bps": 15.6
+ },
+ {
+  "t": "10:04:19Z",
+  "med": 0.08024999999999999,
+  "sell_eff": 0.08053540099999999,
+  "buy_eff": 0.0810556144874516,
+  "sell_edge_bps": 35.6,
+  "buy_prem_bps": 100.4,
+  "roundtrip_bps": -64.8,
+  "venue_disp_bps": 6.9
+ }
+]

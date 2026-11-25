@@ -16,7 +16,8 @@ pool's own contracts on 25 Nov 2026.
 | What I measured | Value | How |
 |---|---|---|
 | WHSK/USDT 0.30% pool TVL | ~$838k (5.19M WHSK + 419k USDT) | `balanceOf(pool)` on both tokens |
-| Swaps in the last ~50 hours | **96** (~$558/day of volume) | `eth_getLogs` on the pool's `Swap` topic |
+| Swaps in the last ~50 hours | **96** (~$559/day) | `eth_getLogs` on the pool's `Swap` topic |
+| Swaps in the last 24 hours | **12 from 3 addresses, $135.09** | same call, 43,200-block window |
 | Spot vs its own 1h TWAP | **0.0 bp apart** | `observe([3600,0])` on the pool |
 | Widest spot-vs-TWAP gap, any lookback 5m-1h | **0.1 bp** | same call, four lookbacks |
 | Round-trip cost, $10 | 59.9 bp | simulated buy+sell against `liquidity()` |
@@ -24,6 +25,10 @@ pool's own contracts on 25 Nov 2026.
 | Single-leg cost, $100 | 62.5 bp | fee 30 bp + impact 32.5 bp |
 | Single-leg cost, $1,000 | 83.9 bp | fee 30 bp + impact 53.9 bp |
 | Cost of deploying a vault | 1.25 HSK = **$0.10** | 2.5M gas at 0.0000005 HSK/gas |
+| Pool spot range, 48h | **24.6 bp** | `slot0` at 48 hourly blocks |
+| Gate (world price) range, same 48h | **292.2 bp** | Gate HSK_USDT 1h candles |
+| Pool activity, most recent 24h | **12 swaps, 3 senders, $135.09** | `eth_getLogs`, 43,200 blocks |
+| Pool spot vs world mid, 48h | **-161.1 to +133.4 bp, median -71.7** | pool `slot0` vs Gate close |
 
 Two of those rows decide the whole design:
 
@@ -34,9 +39,44 @@ Two of those rows decide the whole design:
   An agent can only profit by entering below a reference and exiting above it; in this pool
   the reference and the price are the same number.
 
-So a vault that dutifully executes whatever the model decides loses 60 bp per round trip
-against a market offering 0.1 bp of opportunity. The rational agent behaviour is to
-**not trade**, and the useful engineering problem is making that refusal trustworthy.
+### Correction: the pool is *stale*, not efficient
+
+My first write-up said "the price does not move" and stopped there. That is incomplete in a way
+that matters, and measuring it properly changed what this submission claims.
+
+The pool's price barely moves **relative to itself**. Measured against an outside reference it
+is not stable, it is *pinned*: over 48 hours the pool's `slot0` travelled **24.6 bp** while
+Gate's HSK_USDT moved **292.2 bp** — the world moved about twelve times further than the pool
+did. The deviation from world mid swung from **-161 bp to +133 bp** across that window,
+flipping sign as the reference moved around the frozen pool. A pool that tracks the world does
+not do that; a pool nobody arbitrages does.
+
+So the honest statement is not "this venue offers no edge". It is: **this venue offers no edge
+measured against *itself*, and whoever is willing to price it against the outside world can see
+a dislocation that nobody on the chain is currently taking.** Right now the pool is roughly
++42 bp rich on the sell side against the best CEX bid: 1,000 WHSK out of the pool returns
+80.5354 USDT where the best bid across Gate/MEXC/KuCoin pays 80.2000. The buy direction is
+correspondingly poor (-119 bp against the best ask), so a round trip still loses **64.8 bp in
+5 of 5 samples** — the dislocation is one-way and it is not harvestable by trading both legs
+inside the pool. It is also gross of exchange taker fees (~20 bp at Gate), which would eat
+most of the 42 bp. I am reporting the number because it shows the pool is mispriced, not
+because it is money on the table at retail fee tiers.
+
+This is a limit of the product, and the gate does not hide it: `availableEdgeBps()` compares
+spot to the pool's *own* TWAP ring buffer. If the entire pool drifts away from world price,
+spot and TWAP drift together, the measured gap stays near zero, and the vault refuses a trade
+that an external reference would call profitable. The gate is honest about local dislocation
+and blind to global dislocation. The fix requires an external price feed, and there is no live
+one on this chain — I checked the feed another entry in this track relies on (APRO HSK/USD,
+`0x86CE42c1...`): it reverts on every getter at every block height and has five lifetime
+transactions, none of them a price publication. Wiring that in behind a `try/catch` would have
+made the vault silently dependent on an empty contract.
+
+Read together: a vault that dutifully executes whatever the model decides loses ~60 bp per
+round trip against a market that offers it ~0.1 bp of *local* opportunity, and the one real
+opportunity it could see is outside the pool and out of reach of a retail fee tier. The
+rational agent behaviour on this venue is to **not trade**, and the useful engineering problem
+is making that refusal trustworthy rather than merely plausible.
 
 ---
 

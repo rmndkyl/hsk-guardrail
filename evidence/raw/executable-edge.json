@@ -1,0 +1,22 @@
+{
+ "books": {
+  "gate": {
+   "bid": 0.0802,
+   "ask": 0.08026
+  },
+  "mexc": {
+   "bid": 0.0802,
+   "ask": 0.08032
+  },
+  "kucoin": {
+   "bid": 0.0802,
+   "ask": 0.0805
+  }
+ },
+ "sell_1000whsk_pool": 80.535401,
+ "sell_1000whsk_bestbid": 80.19999999999999,
+ "buy_1000usdt_pool_whsk": 12310.8810981282,
+ "buy_1000usdt_bestask_whsk": 12459.5066035385,
+ "pool_range_48h_bp": 59.6,
+ "cex_range_48h_bp": 292.2
+}

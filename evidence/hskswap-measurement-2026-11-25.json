@@ -1,0 +1,107 @@
+{
+ "measured_at_utc": "2026-11-25T10:08:39Z",
+ "network": {
+  "chain": "HSK Chain mainnet",
+  "chain_id": 177,
+  "pool": "0x4ff515761864e7838B0AdB8b5b2B8B7A068905dC",
+  "pair": "WHSK/USDT",
+  "fee_bps": 30,
+  "token0": {
+   "address": "0xb210d2120d57b758ee163cffb43e73728c471cf1",
+   "symbol": "WHSK",
+   "decimals": 18
+  },
+  "token1": {
+   "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+   "symbol": "USDT",
+   "decimals": 6
+  },
+  "reserves": {
+   "whsk": 5193488.6,
+   "usdt": 419535.96
+  },
+  "price_from_reserves": 0.08078115,
+  "price_from_sqrtPriceX96": 0.08079325,
+  "two_methods_agree_bp": 1.5
+ },
+ "finding_1_pool_is_stale": {
+  "pool_spot_range_48h_bp": 24.6,
+  "world_price_range_48h_bp": 292.2,
+  "ratio_pool_vs_world_movement": 0.08,
+  "pool_spot_range_24h_bp": 3.4,
+  "conclusion": "the pool does not track the world price; it is pinned near one tick while the reference moves ~5x further around it",
+  "dev_min_bp": -161.1,
+  "dev_max_bp": 133.4,
+  "dev_median_bp": -71.7,
+  "hours_pool_above_world": 5,
+  "hours_sampled": 48,
+  "note": "deviation flips sign with the world price, which is what a stale pool does; it is NOT a persistent one-way premium"
+ },
+ "finding_2_activity_collapsed": {
+  "last_24h": {
+   "hours": 24,
+   "swaps": 12,
+   "unique_senders": 3,
+   "whsk": 1673.03,
+   "usdt": 135.09
+  },
+  "last_50h": {
+   "hours": 50,
+   "swaps": 96,
+   "unique_senders": 4,
+   "whsk": 14402.04,
+   "usdt": 1163.91
+  },
+  "correction": "the README figure of '$558/day' is a 50h average. The most recent 24h cleared $135.09 across 12 swaps from 3 addresses. Both are true; the 24h figure is the current state and it is 4x smaller."
+ },
+ "finding_3_executable_edge_is_one_way": {
+  "best_bid_across_gate_mexc_kucoin": {
+   "gate": {
+    "bid": 0.0802,
+    "ask": 0.08026
+   },
+   "mexc": {
+    "bid": 0.0802,
+    "ask": 0.08032
+   },
+   "kucoin": {
+    "bid": 0.0802,
+    "ask": 0.0805
+   }
+  },
+  "sell_1000_whsk_pool_usdt": 80.5354,
+  "sell_1000_whsk_bestbid_usdt": 80.2,
+  "sell_advantage_vs_best_bid_bp": 41.8,
+  "buy_1000_usdt_pool_whsk": 12310.88,
+  "buy_1000_usdt_bestask_whsk": 12459.51,
+  "buy_disadvantage_vs_best_ask_bp": -119.3,
+  "round_trip_bp_5_samples": [
+   -64.8,
+   -64.8,
+   -64.8,
+   -64.8,
+   -64.8
+  ],
+  "round_trip_profitable_samples": 0,
+  "samples": 5,
+  "caveat": "gross of exchange taker fees. Gate spot taker is ~20 bp and a CEX->chain round trip also pays a withdrawal, so a +42 bp sell-side advantage does not by itself fund the loop. It is reported because it is the number that shows the pool is mispriced, not because it is harvestable at retail fee tiers."
+ },
+ "finding_4_the_gate_cannot_see_this": {
+  "current_gate": "refuses when |spot - own TWAP| < round-trip cost + margin",
+  "blind_spot": "if the WHOLE pool drifts away from world price, spot and TWAP move together, the measured gap stays ~0, and the vault refuses a trade that an external reference says is actually profitable (or permits none of one that is not)",
+  "verified_dead_oracle": {
+   "asset": "APRO HSK/USD (used by another entry in this track)",
+   "address": "0x86CE42c1b714149Dc3A7b17169EF67b5F78A224b",
+   "status": "reverts on latestRoundData/decimals/description/aggregator/owner at every block height tested; 5 lifetime transactions, none a price publication",
+   "consequence": "no usable on-chain external reference exists on this chain today"
+  }
+ },
+ "raw_files": [
+  "dislocation-48h.json",
+  "dislocation-5x.json",
+  "executable-edge.json",
+  "quotes.json",
+  "pool-activity.json",
+  "pool-vs-cex.json"
+ ]
+}
