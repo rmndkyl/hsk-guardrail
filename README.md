@@ -272,12 +272,16 @@ balances. `QuoterV2` returns live quotes, which is the end-to-end proof it is th
 
 ## Honest limits
 
-- **The vault has not traded on mainnet.** Deploying costs 1.25 HSK (~$0.10) and I hold none:
-  I scanned all 55,114 EVM addresses in my wallet vault and every one has a zero HSK balance, and
-  the testnet faucet is gated behind reCAPTCHA Enterprise. What *is* proven is that the trade path
-  executes correctly on a mainnet fork (`test/TradePath.t.sol`, 1,124 WHSK received). The deploy
-  script is written and costed. Note the event rules require mainnet deployment only for teams
-  selected for the demo, announced 4 Dec.
+- **The vault has not traded on mainnet.** Deploying costs 1.25 HSK (~$0.10) and I hold none.
+  Evidence: 303 addresses sampled across my vault (including the three most likely to hold
+  something) return zero HSK; the only non-zero EVM balances anywhere are ~$0.02 of dust on
+  BSC/Arbitrum/Base, far under the ~$0.10 needed. The HSK testnet faucet is gated behind
+  reCAPTCHA Enterprise — I solved its HMAC request signing (`x-date` + `request-line`, newline
+  separated) but not the captcha, and stopped there deliberately rather than farming it.
+  What *is* proven is that the trade path executes correctly on a mainnet fork
+  (`test/TradePath.t.sol`, 1,124 WHSK received). The deploy script is written and costed.
+  Per the event rules, mainnet deployment is required only for teams selected for the demo
+  (announced 4 Dec), so this does not block the entry.
 - **Testnet is not usable for this.** HSK testnet (chainId 133) has no WHSK/USDT pool at all -
   `getPool` returns zero for every fee tier. Any demo on testnet would need a pool deployed
   first, which itself needs testnet gas.
@@ -286,6 +290,26 @@ balances. `QuoterV2` returns live quotes, which is the end-to-end proof it is th
   is correct, not that the strategy is profitable.
 - **`availableEdgeBps` reads four fixed lookbacks.** A real deployment would tune these per
   market; the values were chosen because they span the range a short-horizon agent would look.
+
+---
+
+## A note on the oracle dependency
+
+The obvious upgrade to this vault is a second reference price from an oracle, so the gate can
+also catch a pool that has drifted from the real world rather than only from its own history.
+The Keel submission uses an "APRO HSK/USD" feed at
+`0x86CE42c1b714149Dc3A7b17169EF67b5F78A224b`. I checked it on chain before wiring it in:
+
+- `latestRoundData()`, `decimals()`, `description()`, `version()`, `aggregator()`, `owner()` —
+  **every call reverts**, and it reverts identically at block heights from 10M to latest.
+- The proxy has **5 transactions in its entire lifetime**, the last one an `acceptOwnership` in
+  May 2026, and none of them a price publication.
+
+So it is a Chainlink-shaped proxy with no aggregator behind it: it cannot be read as a price
+feed today. Wiring it in would have made the vault depend on a contract that returns nothing,
+and a `try/catch` fallback would have silently hidden that. The gate therefore uses the pool's
+own `observe()` ring buffer, which is verifiable and self-contained. Adding an external oracle
+is the right next step *once a live feed exists on this chain*.
 
 ---
 
