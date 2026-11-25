@@ -267,6 +267,8 @@ reason is a measurement you can read off the page, not a status badge. The comma
 inline as a single ruled line; there is no chat widget and no send button, because an LLM that
 picks sizes freely is the exact failure mode this design exists to replace.
 
+**Live: https://rmndkyl.github.io/hsk-guardrail/** — the same page, served statically from `docs/`. It reads HSK Chain in your browser through `docs/kharon-rpc.js`, a port of `agent/kharon.py` tested to produce identical numbers from the same bytes, and it prints the block it read so the figure can be checked on the explorer.
+
 **[Watch the 74s demo](demo/kharon-demo.mp4)** — real browser session, live chain data.
 
 Commands: `status`, `why`, `decide`, `history [n]`, `size <usd>`, `claim <bps>`,
