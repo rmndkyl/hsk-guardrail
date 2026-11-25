@@ -257,10 +257,17 @@ this market can be made for free, and it stays true whether or not anyone funds 
 
 The track asks for "a conversational interface that lets users see positions and P&L in real
 time and adjust position size, trade frequency, risk appetite and target assets". That is
-`agent/desk.py` — a single-file HTTP server, no build step, no framework, reading live chain
-state on every refresh.
+`agent/desk.py` serving `agent/desk_page.html` — a single-file HTTP server, no build step, no
+framework, reading live chain state on every refresh. The page is a plain HTML file next to the
+server, not a string inside it, so it can be edited and reloaded without a restart.
 
-**[Watch the 73s demo](demo/kharon-demo.mp4)** — real browser session, live chain data.
+The interface is a decision record rather than a dashboard: the refusal is drawn as a scaled
+axis — what the pool offers, what policy demands, and the shaded shortfall between them — so the
+reason is a measurement you can read off the page, not a status badge. The command grammar sits
+inline as a single ruled line; there is no chat widget and no send button, because an LLM that
+picks sizes freely is the exact failure mode this design exists to replace.
+
+**[Watch the 74s demo](demo/kharon-demo.mp4)** — real browser session, live chain data.
 
 Commands: `status`, `why`, `decide`, `history [n]`, `size <usd>`, `claim <bps>`,
 `margin <bps>`, `appetite conservative|balanced|aggressive`.
@@ -272,13 +279,11 @@ box that can talk the vault into anything.
 ```bash
 python3 agent/desk.py                      # http://127.0.0.1:8791
 
-# re-render the demo video from a live desk (needs playwright + ffmpeg).
-# demo_video.py defaults to :8792, so point the desk there or set DESK_URL.
-DESK_PORT=8792 python3 agent/desk.py &
-DESK_URL=http://127.0.0.1:8792/ python agent/demo_video.py
+# re-render the demo video from a live desk (needs playwright + ffmpeg on PATH)
+python agent/demo_video.py                 # records whatever is on :8791
 ```
 
-The demo video (`demo/kharon-demo.mp4`, 73s, 1080p, 1920x1080) is a real browser session
+The demo video (`demo/kharon-demo.mp4`, 74s, 1080p, 1920x1080) is a real browser session
 against the live desk — every number in it came off HSK Chain during the recording. It is
 re-rendered whenever a number in it stops being true; the last re-render corrected the daily
 volume and replaced a caption that said “recorded on chain” when the ledger is a local file.

@@ -219,156 +219,25 @@ def run_command(text: str):
         return f"Unknown command `{cmd}`. Type `help`.", False
 
 
-PAGE = """<!doctype html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kharon desk</title>
-<style>
-  :root { --bg:#0b0c10; --panel:#12141a; --line:#232733; --text:#e6e8ee; --dim:#9aa3b8;
-          --good:#37d67a; --bad:#ff5c7a; --accent:#5b8cff; }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--text);font:14.5px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace}
-  .wrap{max-width:1080px;margin:0 auto;padding:20px}
-  header{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
-         border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:16px;flex-wrap:wrap}
-  h1{font-size:16px;margin:0;letter-spacing:.04em}
-  .sub{color:var(--dim);font-size:12.5px}
-  .grid{display:grid;grid-template-columns:1.15fr 1fr;gap:14px}
-  @media(max-width:820px){.grid{grid-template-columns:1fr}}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
-  .card h2{margin:0 0 10px;font-size:11px;letter-spacing:.12em;color:var(--dim);
-           text-transform:uppercase;font-weight:600}
-  .kv{display:flex;justify-content:space-between;gap:10px;padding:3px 0}
-  .kv span:first-child{color:var(--dim)}
-  .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.06em}
-  .allow{background:rgba(55,214,122,.14);color:var(--good);border:1px solid rgba(55,214,122,.35)}
-  .refuse{background:rgba(255,92,122,.13);color:var(--bad);border:1px solid rgba(255,92,122,.35)}
-  .reason{margin-top:10px;padding:10px;background:#0e1015;border-left:2px solid var(--bad);
-          border-radius:4px;font-size:12.5px;color:#c7cdda;white-space:pre-wrap}
-  #log{height:190px;overflow-y:auto;background:#0e1015;border:1px solid var(--line);
-       border-radius:8px;padding:10px;font-size:12.5px;white-space:pre-wrap;margin-bottom:10px}
-  .u{color:var(--accent)} .a{color:#c7cdda}
-  form{display:flex;gap:8px}
-  input{flex:1;background:#0e1015;border:1px solid var(--line);color:var(--text);
-        border-radius:7px;padding:9px 11px;font:inherit;outline:none}
-  input:focus{border-color:var(--accent)}
-  button{background:var(--accent);border:0;color:#fff;border-radius:7px;padding:9px 15px;
-         font:inherit;font-weight:600;cursor:pointer}
-  button:hover{filter:brightness(1.1)}
-  .hint{color:var(--dim);font-size:12.5px;margin-top:8px}
-  table{width:100%;border-collapse:collapse;font-size:12px}
-  th{text-align:left;color:var(--dim);font-weight:500;padding:4px 6px;border-bottom:1px solid var(--line)}
-  td{padding:4px 6px;border-bottom:1px solid #191c24}
-  .ok{color:var(--good)} .no{color:var(--bad)}
-</style></head><body><div class="wrap">
-<header>
-  <div><h1>KHARON DESK</h1>
-  <div class="sub">GuardrailVault &middot; HSK Chain &middot; <span id="pair">WHSK/USDT 0.30%</span>
-  &middot; <span id="clock">-</span></div></div>
-  <div><span id="verdict" class="pill refuse">-</span></div>
-</header>
+# The page lives next to this file so it can be edited as HTML, not as a Python
+# string literal. Keeping it out of the source also keeps this module readable.
+PAGE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "desk_page.html")
 
-<div class="grid">
-  <div class="card">
-    <h2>Market (live, read from the pool)</h2>
-    <div class="kv"><span>spot</span><b id="spot">-</b></div>
-    <div class="kv"><span>widest spot-vs-TWAP gap</span><b id="gap">-</b></div>
-    <div class="kv"><span>round-trip cost</span><b id="rt">-</b></div>
-    <div class="kv"><span>single-leg cost</span><b id="leg">-</b></div>
-    <div class="kv"><span>policy requires</span><b id="req">-</b></div>
-    <div class="kv"><span>agent claims</span><b id="claimv">-</b></div>
-    <div id="reason" class="reason">-</div>
-  </div>
 
-  <div class="card">
-    <h2>Desk</h2>
-    <div class="kv"><span>appetite</span><b id="appetite">-</b></div>
-    <div class="kv"><span>proposed size</span><b id="size">-</b></div>
-    <div class="kv"><span>required margin</span><b id="marginv">-</b></div>
-    <div class="kv"><span>decisions recorded</span><b id="tot">-</b></div>
-    <h2 style="margin-top:16px">Talk to it</h2>
-    <div id="log"></div>
-    <form onsubmit="send(event)">
-      <input id="cmd" placeholder="type a command…" autocomplete="off">
-      <button>Send</button>
-    </form>
-    <div class="hint">Try: <b>status</b> &middot; <b>why</b> &middot; <b>decide</b> &middot; <b>size 100</b> &middot; <b>claim 200</b></div>
-  </div>
-</div>
+def load_page() -> str:
+    """Read the desk page from disk. Re-read on every request so an edit shows up
+    on refresh without restarting the server."""
+    try:
+        with open(PAGE_PATH, encoding="utf-8") as f:
+            return f.read()
+    except OSError as exc:
+        return (
+            "<!doctype html><meta charset=utf-8>"
+            "<body style=\"font:16px/1.5 Georgia,serif;padding:40px;max-width:40em\">"
+            f"<h1>Desk page missing</h1><p>Could not read <code>{PAGE_PATH}</code>: "
+            f"{exc}</p><p>The API is still up: <a href=/api/state>/api/state</a>.</p>"
+        )
 
-<div class="card" style="margin-top:14px">
-  <h2>Decision ledger (append-only)</h2>
-  <table><thead><tr><th>time</th><th>decision</th><th>size</th><th>gap</th><th>round trip</th><th>claim</th><th>reason</th></tr></thead>
-  <tbody id="hist"></tbody></table>
-</div>
-</div>
-
-<script>
-function log(cls, txt){
-  const el = document.getElementById('log');
-  const d = document.createElement('div');
-  d.className = cls; d.textContent = txt;
-  el.appendChild(d); el.scrollTop = el.scrollHeight;
-}
-function fmt(v, dp){ return v==null ? '-' : Number(v).toFixed(dp); }
-
-async function refresh(){
-  try{
-    const r = await fetch('/api/state');
-    const s = await r.json();
-    if (s.error){ log('a', 'chain read failed: ' + s.error); return; }
-    const d = s.decision, m = d.measured;
-    document.getElementById('spot').textContent = fmt(m.spot, 6) + ' USDT/WHSK';
-    document.getElementById('gap').textContent = fmt(m.widest_gap_bps, 2) + ' bp @ ' + m.gap_window_seconds + 's';
-    document.getElementById('rt').textContent = fmt(m.round_trip_cost_bps, 2) + ' bp';
-    document.getElementById('leg').textContent = fmt(m.single_leg_cost_bps, 2) + ' bp';
-    document.getElementById('req').textContent = fmt(m.required_bps, 2) + ' bp';
-    document.getElementById('claimv').textContent = fmt(d.claimed_edge_bps, 1) + ' bp';
-    document.getElementById('reason').textContent = d.reasons.join('\\n');
-    document.getElementById('appetite').textContent = s.desk.appetite;
-    document.getElementById('size').textContent = '$' + fmt(s.desk.notional, 2);
-    document.getElementById('marginv').textContent = fmt(s.desk.margin, 0) + ' bp';
-    document.getElementById('tot').textContent = s.totals.decisions +
-        ' (' + s.totals.allowed + ' allowed / ' + s.totals.refused + ' refused)';
-    const v = document.getElementById('verdict');
-    v.textContent = d.action;
-    v.className = 'pill ' + (d.allowed ? 'allow' : 'refuse');
-    document.getElementById('clock').textContent = s.server_time.replace('T',' ').replace('+00:00',' UTC');
-    const tb = document.getElementById('hist');
-    tb.innerHTML = '';
-    for (const row of s.history){
-      const tr = document.createElement('tr');
-      const m2 = row.measured || {};
-      tr.innerHTML = '<td>' + (row.ts||'').slice(11,19) + '</td>' +
-        '<td class="' + (row.allowed?'ok':'no') + '">' + row.action + '</td>' +
-        '<td>$' + (row.notional_usd||0).toFixed(0) + '</td>' +
-        '<td>' + fmt(m2.widest_gap_bps,2) + ' bp</td>' +
-        '<td>' + (m2.round_trip_cost_bps ?? '-') + ' bp</td>' +
-        '<td>' + (row.claimed_edge_bps||0).toFixed(0) + ' bp</td>' +
-        '<td style="color:var(--dim)">' + (row.reasons && row.reasons[0] ? row.reasons[0].split(':')[0] : '-') + '</td>';
-      tb.appendChild(tr);
-    }
-  }catch(e){ log('a','refresh failed: '+e.message); }
-}
-
-async function send(ev){
-  ev.preventDefault();
-  const inp = document.getElementById('cmd');
-  const text = inp.value.trim(); if(!text) return;
-  inp.value='';
-  log('u', '> ' + text);
-  try{
-    const r = await fetch('/api/command', {method:'POST', headers:{'Content-Type':'application/json'},
-                                          body: JSON.stringify({text})});
-    const j = await r.json();
-    log('a', j.reply || '(no reply)');
-    if (j.refresh) refresh();
-  }catch(e){ log('a','command failed: '+e.message); }
-}
-
-refresh();
-setInterval(refresh, 15000);
-</script></body></html>
-"""
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -390,7 +259,7 @@ class Handler(BaseHTTPRequestHandler):
             body = json.dumps(build_state(), default=str).encode()
             self._send(200, body, "application/json")
         elif self.path in ("/", "/index.html"):
-            self._send(200, PAGE.encode(), "text/html; charset=utf-8")
+            self._send(200, load_page().encode(), "text/html; charset=utf-8")
         else:
             self._send(404, b'{"error":"not found"}', "application/json")
 

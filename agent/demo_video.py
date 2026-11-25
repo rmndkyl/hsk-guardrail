@@ -19,30 +19,30 @@ import time
 
 from playwright.sync_api import sync_playwright
 
-DESK = os.environ.get("DESK_URL", "http://127.0.0.1:8792/")
+DESK = os.environ.get("DESK_URL", "http://127.0.0.1:8791/")
 OUT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "demo")
 FRAMES = os.path.join(OUT_DIR, "frames")
-W, H = 1600, 900   # 16:9 so the 1080p render does not letterbox
+W, H = 1600, 1000   # 16:9 so the 1080p render does not letterbox
 FPS = 12
 
 # (seconds to hold, caption, action) — action is a callable or None
 SCRIPT = [
-    (3.5, "HSK Chain Horizon · AI Agent Trading track", None),
-    (4.0, "I measured the pool before writing any trading logic", "scroll"),
-    (4.5, "96 swaps in 50h on $838k TVL — the last 24h: 12 swaps, $135", None),
-    (4.5, "Spot sits on its own 1h TWAP to within 0.1 bp", None),
-    (4.0, "A round trip costs ~60 bp. Locally it offers 0.1 bp.", None),
-    (5.0, "Against world price it is stale: pool moved 25 bp in 48h", None),
-    (5.0, "while the world moved 292 bp around it", None),
-    (3.5, "So refusing is correct — and the gate says why, in numbers", None),
-    (5.0, "The vault enforces that, on numbers it measures itself", "cmd:status"),
+    (3.5, "HSK Chain Horizon · AI Agent Trading track", "top"),
+    (4.0, "I measured the pool before writing any trading logic", "top"),
+    (4.5, "96 swaps in 50h on $838k TVL — the last 24h: 12 swaps, $135", "measured"),
+    (4.5, "Spot sits on its own 1h TWAP to within 0.1 bp", "measured"),
+    (4.0, "A round trip costs ~60 bp. Locally it offers 0.1 bp.", "top"),
+    (5.0, "Against world price it is stale: pool moved 25 bp in 48h", "top"),
+    (5.0, "while the world moved 292 bp around it", "top"),
+    (4.0, "So refusing is correct — and the gate shows why, in numbers", "top"),
+    (5.0, "The vault enforces that, on numbers it measures itself", "desk"),
     (5.0, "Ask why — it shows every number behind the refusal", "cmd:why"),
     (4.5, "Try to trade anyway. Size and claim don't help.", "cmd:size 100"),
     (5.0, "", "cmd:claim 200"),
     (5.5, "Appended to the ledger. Refusals are first-class evidence.", "cmd:decide"),
-    (5.0, "The adversarial suite found a real bug: 0bp cost at $50M", None),
-    (5.0, "26/26 fork tests, incl. one that proves the gate OPENS", "scrollbottom"),
-    (4.5, "github.com/rmndkyl/hsk-guardrail", None),
+    (5.0, "The adversarial suite found a real bug: 0bp cost at $50M", "ledger"),
+    (5.0, "26/26 fork tests, incl. one that proves the gate OPENS", "ledger"),
+    (4.5, "github.com/rmndkyl/hsk-guardrail", "ledger"),
 ]
 
 
@@ -64,7 +64,7 @@ def main():
         # A caption bar pinned to the bottom of the viewport, on top of the page.
         page.goto(DESK, wait_until="networkidle")
         page.add_style_tag(content="""
-            body { padding-bottom: 120px !important; }
+            body { padding-bottom: 210px !important; }
             #demo-cap {
               position: fixed; left: 0; right: 0; bottom: 0; z-index: 99999;
               background: linear-gradient(to top, rgba(6,7,10,.97), rgba(6,7,10,.86));
@@ -97,7 +97,9 @@ def main():
             )
 
         def type_command(text):
-            page.click("#cmd")
+            # Keep the scroll position under our control: focus/click would otherwise
+            # yank the page down to the input and crop the figure out of the frame.
+            page.evaluate("document.getElementById('cmd').focus({preventScroll:true})")
             page.fill("#cmd", "")
             page.type("#cmd", text, delay=55)
             page.wait_for_timeout(280)
@@ -107,7 +109,24 @@ def main():
         for hold, cap, action in SCRIPT:
             caption(cap)
             page.wait_for_timeout(400)
-            if action == "scroll":
+            if action == "top":
+                page.evaluate("window.scrollTo({top:0,behavior:'instant'})")
+            elif action == "measured":
+                page.evaluate("""() => {
+                    const h = document.querySelectorAll('.band')[0];
+                    if (h) window.scrollTo({top: h.offsetTop - 40, behavior:'instant'});
+                }""")
+            elif action == "desk":
+                page.evaluate("""() => {
+                    const v = document.querySelectorAll('.band')[1];
+                    if (v) window.scrollTo({top: v.offsetTop - 40, behavior:'instant'});
+                }""")
+            elif action == "ledger":
+                page.evaluate("""() => {
+                    const l = document.querySelector('.ledger');
+                    if (l) window.scrollTo({top: l.offsetTop - 30, behavior:'instant'});
+                }""")
+            elif action == "scroll":
                 page.mouse.wheel(0, 220)
             elif action == "scrollbottom":
                 page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
