@@ -85,6 +85,29 @@ fiksi di $1M (3.38x) dan $50M (119.8x). Fix: kalau harga simulasi bergerak >2x, 
 4. **Batas gate ditulis eksplisit** di README + paket submission: gate buta terhadap
    dislokasi global karena hanya membaca ring buffer TWAP pool sendiri.
 
+## Redesign UI (25 Nov, putaran kedua)
+
+UI lama gugur audit desain: `#0b0c10` + kartu rounded 10px + label uppercase
+letter-spaced + monospace seluruh halaman + pill berwarna. Itu template dashboard
+AI standar, tidak bisa dibedakan dari entri lain di track.
+
+Sekarang: **decision record**, bukan dashboard. Penolakan digambar sebagai
+pengukuran — sumbu berskala dengan tick 0/100/200, titik untuk offer / needed /
+claim, dan band merah yang lebarnya = shortfall (109.79 bp). Pembaca bisa
+memverifikasi posisi terhadap angka, bukan percaya prosa.
+
+- Halaman pindah ke `agent/desk_page.html`, dibaca dari disk tiap request
+  (`load_page()`). `desk.py` turun 32 KB -> 11 KB.
+- Tipografi: Newsreader (display) + Archivo (label). Tanpa kartu, tanpa radius,
+  tanpa shadow, 3 garis pemisah saja.
+- Command grammar inline satu baris bergaris; tanpa widget chat, tanpa tombol Send.
+- Recorder diperbaiki: `focus({preventScroll:true})` supaya figure tidak
+  ter-scroll keluar frame saat mengetik. Viewport 1600x1000, clearance caption 210px.
+- Video 74s, 1920x1080, 698 KB.
+
+Verifikasi: 26/26 test, page 200 dari file, tanpa overflow horizontal di
+390/768/1024/1440px, tiap klaim dicek ke frame video. Commit `407db0e`.
+
 ## Yang belum selesai
 
 1. **Belum submit ke DoraHacks** — butuh login user + lewati Cloudflare Turnstile (CAPTCHA
