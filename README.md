@@ -141,6 +141,34 @@ this market can be made for free, and it stays true whether or not anyone funds 
 
 ---
 
+## The desk (what the track asks for)
+
+The track asks for "a conversational interface that lets users see positions and P&L in real
+time and adjust position size, trade frequency, risk appetite and target assets". That is
+`agent/desk.py` — a single-file HTTP server, no build step, no framework, reading live chain
+state on every refresh.
+
+**[Watch the 58s demo](demo/kharon-demo.mp4)** — real browser session, live chain data.
+
+Commands: `status`, `why`, `decide`, `history [n]`, `size <usd>`, `claim <bps>`,
+`margin <bps>`, `appetite conservative|balanced|aggressive`.
+
+The grammar is deliberately small and explicit. An LLM that picks sizes freely is the exact
+failure mode this design exists to replace, so the desk exposes the *policy*, not a prompt
+box that can talk the vault into anything.
+
+```bash
+python3 agent/desk.py                      # http://127.0.0.1:8791
+
+# re-render the demo video from a live desk (needs playwright + ffmpeg)
+DESK_URL=http://127.0.0.1:8791/ python agent/demo_video.py
+```
+
+The demo video (`demo/kharon-demo.mp4`, 58s, 1080p) is a real browser session against the live
+desk — every number in it came off HSK Chain during the recording.
+
+---
+
 ## Run it
 
 ```bash

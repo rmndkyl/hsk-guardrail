@@ -288,7 +288,7 @@ PAGE = """<!doctype html>
     <h2 style="margin-top:16px">Talk to it</h2>
     <div id="log"></div>
     <form onsubmit="send(event)">
-      <input id="cmd" placeholder="status, why, decide, size 25, appetite conservative" autocomplete="off">
+      <input id="cmd" placeholder="type a command…" autocomplete="off">
       <button>Send</button>
     </form>
     <div class="hint">Try: <b>status</b> &middot; <b>why</b> &middot; <b>decide</b> &middot; <b>size 100</b> &middot; <b>claim 200</b></div>
@@ -297,7 +297,7 @@ PAGE = """<!doctype html>
 
 <div class="card" style="margin-top:14px">
   <h2>Decision ledger (append-only)</h2>
-  <table><thead><tr><th>time</th><th>decision</th><th>size</th><th>gap</th><th>round trip</th><th>claim</th></tr></thead>
+  <table><thead><tr><th>time</th><th>decision</th><th>size</th><th>gap</th><th>round trip</th><th>claim</th><th>reason</th></tr></thead>
   <tbody id="hist"></tbody></table>
 </div>
 </div>
@@ -343,7 +343,8 @@ async function refresh(){
         '<td>$' + (row.notional_usd||0).toFixed(0) + '</td>' +
         '<td>' + fmt(m2.widest_gap_bps,2) + ' bp</td>' +
         '<td>' + (m2.round_trip_cost_bps ?? '-') + ' bp</td>' +
-        '<td>' + (row.claimed_edge_bps||0).toFixed(0) + ' bp</td>';
+        '<td>' + (row.claimed_edge_bps||0).toFixed(0) + ' bp</td>' +
+        '<td style="color:var(--dim)">' + (row.reasons && row.reasons[0] ? row.reasons[0].split(':')[0] : '-') + '</td>';
       tb.appendChild(tr);
     }
   }catch(e){ log('a','refresh failed: '+e.message); }
