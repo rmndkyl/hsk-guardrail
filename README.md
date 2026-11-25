@@ -260,7 +260,7 @@ time and adjust position size, trade frequency, risk appetite and target assets"
 `agent/desk.py` — a single-file HTTP server, no build step, no framework, reading live chain
 state on every refresh.
 
-**[Watch the 58s demo](demo/kharon-demo.mp4)** — real browser session, live chain data.
+**[Watch the 73s demo](demo/kharon-demo.mp4)** — real browser session, live chain data.
 
 Commands: `status`, `why`, `decide`, `history [n]`, `size <usd>`, `claim <bps>`,
 `margin <bps>`, `appetite conservative|balanced|aggressive`.
@@ -272,12 +272,16 @@ box that can talk the vault into anything.
 ```bash
 python3 agent/desk.py                      # http://127.0.0.1:8791
 
-# re-render the demo video from a live desk (needs playwright + ffmpeg)
-DESK_URL=http://127.0.0.1:8791/ python agent/demo_video.py
+# re-render the demo video from a live desk (needs playwright + ffmpeg).
+# demo_video.py defaults to :8792, so point the desk there or set DESK_URL.
+DESK_PORT=8792 python3 agent/desk.py &
+DESK_URL=http://127.0.0.1:8792/ python agent/demo_video.py
 ```
 
-The demo video (`demo/kharon-demo.mp4`, 58s, 1080p) is a real browser session against the live
-desk — every number in it came off HSK Chain during the recording.
+The demo video (`demo/kharon-demo.mp4`, 73s, 1080p, 1920x1080) is a real browser session
+against the live desk — every number in it came off HSK Chain during the recording. It is
+re-rendered whenever a number in it stops being true; the last re-render corrected the daily
+volume and replaced a caption that said “recorded on chain” when the ledger is a local file.
 
 ---
 
