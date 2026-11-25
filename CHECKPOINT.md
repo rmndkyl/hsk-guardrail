@@ -108,6 +108,28 @@ memverifikasi posisi terhadap angka, bukan percaya prosa.
 Verifikasi: 26/26 test, page 200 dari file, tanpa overflow horizontal di
 390/768/1024/1440px, tiap klaim dicek ke frame video. Commit `407db0e`.
 
+## SUBMITTED (25 Nov 2026)
+
+Build publik: **https://dorahacks.io/build/51885**
+
+Terverifikasi dari halaman publiknya, bukan asumsi: judul, tagline, empat tag,
+GitHub, video, live app, X, Members 1, deskripsi lengkap lima bagian.
+
+Dua masalah ditemukan SETELAH submit:
+
+1. **Halaman build tidak menampilkan blok hackathon apa pun.** Tidak ada nama
+   hackathon, track, status submission, atau prize. Kata "hackathon" di halaman itu
+   hanya muncul di menu nav, di dalam teks deskripsi sendiri, dan di footer situs.
+   Dugaan: build tersimpan sebagai BUIDL biasa, belum tertaut ke HSK Chain Horizon.
+   Belum bisa dipastikan dari sini karena daftar build di halaman hackathon
+   di-render JavaScript dan browser otomatis diblokir Cloudflare challenge.
+   Tindakan: user cek langsung di Chrome apakah "Kharon" muncul di tab Builds.
+2. **Markdown tidak ter-render.** `###` dan `**` tampil mentah di deskripsi.
+   Versi bersih sudah disiapkan: `DESKRIPSI-PLAIN.txt` (6.336 karakter, tanpa
+   penanda markdown, heading pakai huruf besar).
+
+Berkas panduan perbaikan: `C:/Users/raman/Downloads/HSK-SUBMIT/PERBAIKAN-SETELAH-SUBMIT.md`
+
 ## Yang belum selesai
 
 1. **Belum submit ke DoraHacks** — butuh login user + lewati Cloudflare Turnstile (CAPTCHA
