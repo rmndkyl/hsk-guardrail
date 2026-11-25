@@ -164,8 +164,15 @@ export class Market {
   }
 }
 
+export async function blockNumber() {
+  const hex = await rpc("eth_blockNumber", []);
+  return Number(BigInt(hex));
+}
+
 export async function readMarket() {
-  const [slot0, liquidity] = await Promise.all([readSlot0(), readLiquidity()]);
+  const [slot0, liquidity, block] = await Promise.all([
+    readSlot0(), readLiquidity(), blockNumber(),
+  ]);
   if (!slot0) throw new Error("cannot read slot0 — RPC unreachable or pool changed");
   const m = new Market(slot0, liquidity);
   const twaps = {};
@@ -173,7 +180,8 @@ export async function readMarket() {
     const t = await twapAt(w);
     if (t !== null) twaps[w] = { tick: t, price: tickToPrice(t) };
   }
-  return { market: m, twaps };
+  m.block = block;
+  return { market: m, twaps, block };
 }
 
 // Port of evaluate() in agent/kharon.py. Same checks, same order, same wording.

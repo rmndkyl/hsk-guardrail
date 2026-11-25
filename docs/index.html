@@ -55,6 +55,10 @@ body{
 .mast .net b{font-weight:600}
 .mast .net .live{color:var(--allowance);font-weight:600}
 .mast .net .dead{color:var(--refusal);font-weight:600}
+.mast .net a.blk{color:var(--ink-2);text-decoration:none;border-bottom:1px solid var(--rule)}
+.mast .net a.blk:hover{color:var(--ink);border-bottom-color:var(--ink)}
+/* units: one spelling everywhere, so nobody wonders whether $ means USDT */
+.row .u.usdt{letter-spacing:.02em}
 @media(max-width:560px){.mast .net{text-align:left}}
 
 /* verdict */
@@ -206,7 +210,8 @@ footer.foot a:hover{color:var(--refusal);border-bottom-color:var(--refusal)}
   <div class="net">
     <b>HSK Chain</b> · chain 177<br>
     WHSK/USDT 0.30% · price in USDT per WHSK<br>
-    <span id="feed">connecting…</span> · <span id="clock">—</span>
+    <span id="feed">connecting…</span> · <span id="clock">—</span><br>
+    <span id="proof">—</span>
   </div>
 </header>
 
@@ -278,7 +283,7 @@ footer.foot a:hover{color:var(--refusal);border-bottom-color:var(--refusal)}
            aria-label="Command for the desk — press Enter to run">
   </form>
   <p class="docket-help">
-    <code>status</code><span class="k">·</span><code>why</code><span class="k">·</span><code>decide</code><span class="k">·</span><code>history</code><span class="k">·</span><code>size 100</code><span class="k">·</span><code>claim 200</code><span class="k">·</span><code>margin 50</code><span class="k">·</span><code>appetite balanced</code>
+    <code>status</code><span class="k">·</span><code>why</code><span class="k">·</span><code>decide</code><span class="k">·</span><code>history</code><span class="k">·</span><code>size 100</code><span class="k">·</span><code>claim 200</code><span class="k">·</span><code>margin 50</code><span class="k">·</span><code>appetite</code>
   </p>
   <p class="note">Type a command and press Enter. <b>size</b> sets the trade in USDT,
      <b>claim</b> and <b>margin</b> are in basis points. Ledger stays in this browser;
@@ -411,7 +416,7 @@ function renderLedger() {
     const cells = [
       ['time', (row.ts || '').slice(11, 19), 't'],
       ['decision', row.action, 'act ' + (row.allowed ? 'ok' : 'no')],
-      ['size', '$' + (row.notional_usd || 0).toFixed(0), 'n'],
+      ['size', (row.notional_usd || 0).toFixed(0) + ' USDT', 'n'],
       ['gap', num(m.widest_gap_bps, 2) + ' bp', 'n'],
       ['round trip', (m.round_trip_cost_bps ?? DASH) + ' bp', 'n'],
       ['claim', (row.claimed_edge_bps || 0).toFixed(0) + ' bp', 'n'],
@@ -468,6 +473,15 @@ async function refresh(showError = true) {
 
     drawFigure(m.widest_gap_bps, m.required_bps, d.claimed_edge_bps);
     $('clock').textContent = new Date().toISOString().slice(0, 19).replace('T', ' ') + ' UTC';
+    // Let a sceptical reader verify the claim instead of trusting it: name the block
+    // the numbers came from and link the pool on the explorer.
+    if (m.block) {
+      const blk = m.block.toLocaleString('en-US');
+      $('proof').innerHTML = 'block <a class="blk" href="https://hsk.blockscout.com/block/' +
+        m.block + '" target="_blank" rel="noopener">' + blk + '</a> · ' +
+        '<a class="blk" href="https://hsk.blockscout.com/address/' + POOL +
+        '?tab=read_contract" target="_blank" rel="noopener">pool on explorer</a>';
+    }
     renderLedger();
     return d;
   } catch (e) {
@@ -485,7 +499,7 @@ function run(text) {
     const v = parseFloat(parts[1]);
     if (!(v > 0) || v > 100) return 'Size must be between 0 and 100 USDT (the vault cap).';
     desk.notional = v; desk.appetite = 'custom';
-    return `Proposed size set to $${v.toFixed(2)}.`;
+    return `Proposed size set to ${v.toFixed(2)} USDT.`;
   }
   if (cmd === 'claim' && parts[1]) {
     const v = parseFloat(parts[1]);
@@ -504,7 +518,7 @@ function run(text) {
     if (name === 'conservative' || name === 'balanced' || name === 'aggressive') {
       const p = APPETITES[name];
       desk.notional = p.notional; desk.margin = p.margin; desk.appetite = name;
-      return `Appetite ${name}: size $${p.notional.toFixed(0)}, margin ${p.margin.toFixed(0)} bp.`;
+      return `Appetite ${name}: size ${p.notional.toFixed(0)} USDT, margin ${p.margin.toFixed(0)} bp.`;
     }
     return 'Unknown appetite. Choose one of: conservative, balanced, aggressive';
   }
@@ -540,7 +554,7 @@ async function command(text) {
     const rows = ledger().slice(-n).reverse();
     if (!rows.length) return 'No history yet.';
     return rows.map(r => `${(r.ts||'').slice(11,19)}  ${r.action.padEnd(7)} ` +
-      `$${(r.notional_usd||0).toFixed(0)}  gap ${num(r.measured?.widest_gap_bps,2)}bp  ` +
+      `${(r.notional_usd||0).toFixed(0)} USDT  gap ${num(r.measured?.widest_gap_bps,2)}bp  ` +
       `cost ${r.measured?.round_trip_cost_bps ?? DASH}bp`).join('\n');
   }
 
