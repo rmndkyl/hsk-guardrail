@@ -112,25 +112,25 @@ Verifikasi: 26/26 test, page 200 dari file, tanpa overflow horizontal di
 
 Build publik: **https://dorahacks.io/build/51885**
 
-Terverifikasi dari halaman publiknya, bukan asumsi: judul, tagline, empat tag,
-GitHub, video, live app, X, Members 1, deskripsi lengkap lima bagian.
+**Terdaftar di hackathon: YA.** Terverifikasi dari screenshot halaman
+`dorahacks.io/hackathon/hskchainseoul/build` milik user: kartu Kharon tampil di tab
+Builds (26 build), dengan **TRACK AI Agent Trading**, logo, tagline, dan empat tag.
+Username tampil sebagai "Mandayy".
 
-Dua masalah ditemukan SETELAH submit:
+Klaim awal di catatan ini — bahwa build mungkin tersimpan sebagai BUIDL biasa tanpa
+tertaut hackathon — **salah dan sudah dibuang**. Penyebabnya: saya menyimpulkan dari
+HTML halaman yang diambil lewat HTTP biasa, padahal kartu di daftar build di-render
+JavaScript, jadi ketiadaannya di HTML bukan bukti.
 
-1. **Halaman build tidak menampilkan blok hackathon apa pun.** Tidak ada nama
-   hackathon, track, status submission, atau prize. Kata "hackathon" di halaman itu
-   hanya muncul di menu nav, di dalam teks deskripsi sendiri, dan di footer situs.
-   Dugaan: build tersimpan sebagai BUIDL biasa, belum tertaut ke HSK Chain Horizon.
-   Belum bisa dipastikan dari sini karena daftar build di halaman hackathon
-   di-render JavaScript dan browser otomatis diblokir Cloudflare challenge.
-   Tindakan: user cek langsung di Chrome apakah "Kharon" muncul di tab Builds.
-2. **Markdown tidak ter-render.** `###` dan `**` tampil mentah di deskripsi.
-   Versi bersih sudah disiapkan: `DESKRIPSI-PLAIN.txt` (6.336 karakter, tanpa
-   penanda markdown, heading pakai huruf besar).
+Satu masalah nyata tersisa: **deskripsi terkurung dalam blok kode.** HTML halaman
+membungkus 6.291 karakter deskripsi dengan `<pre><code class="language-javascript">`,
+sehingga `###` dan `**` tampil literal. Penyebabnya tombol code-block editor aktif
+saat menempel. Perbaikannya: matikan mode code, hapus, tempel pakai Ctrl+Shift+V.
+Cadangan tanpa markdown: `~/Downloads/HSK-SUBMIT/DESKRIPSI-PLAIN.txt`.
 
-Berkas panduan perbaikan: `C:/Users/raman/Downloads/HSK-SUBMIT/PERBAIKAN-SETELAH-SUBMIT.md`
+Panduan: `C:/Users/raman/Downloads/HSK-SUBMIT/KOREKSI-DAN-SISA-MASALAH.md`
 
-## Yang belum selesai
+## Yang belum selesai## Yang belum selesai
 
 1. **Belum submit ke DoraHacks** — butuh login user + lewati Cloudflare Turnstile (CAPTCHA
    gambar). Tidak bisa diotomasi, dan memang tidak seharusnya. Isi berkas submission sudah siap
