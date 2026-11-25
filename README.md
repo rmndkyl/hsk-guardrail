@@ -293,6 +293,29 @@ balances. `QuoterV2` returns live quotes, which is the end-to-end proof it is th
 
 ---
 
+## On "adjust target assets"
+
+The track asks the interface to let a user adjust target assets. The desk adjusts size,
+frequency (cooldown) and risk appetite directly, but the vault's pool is **immutable**, and
+that is deliberate. A settable pool reference is an attack surface: whoever can point the vault
+at a pool can point it at a pool they control.
+
+I surveyed every pool on HSKSwap mainnet before making that call — `getPool` across
+WHSK/USDT, WETH/USDT, WBTC/USDT, USDC/WHSK at fee tiers 500/3000/10000, keeping only pools
+with non-zero `liquidity()`:
+
+| Pair | Fee | Liquidity |
+|---|---|---|
+| WHSK/USDT | 0.30% | 1,475,813,786,831,558,685 |
+| WETH/USDT | 0.30% | 1,012,957,283,335,421 |
+| WBTC/USDT | 0.30% | 1,823,343,427 |
+
+Three liquid pools exist on the whole chain, and WHSK/USDT is 99.8% of the liquidity. So
+"changing target asset" would mean redeploying against one of two pools that are ~1,000x
+thinner — not a feature, a footgun. Switching target is a deploy operation (one command in
+`script/Deploy.s.sol`), not a runtime setting, and the README says so rather than shipping a
+setting that quietly makes the vault worse.
+
 ## A note on the oracle dependency
 
 The obvious upgrade to this vault is a second reference price from an oracle, so the gate can
