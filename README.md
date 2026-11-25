@@ -135,6 +135,13 @@ a dead market says yes, and executes, when the market moves.
 address, privilege escalation, five separate attempts by the owner to loosen a limit, a
 self-reported loss, pause, ledger tampering, and degenerate inputs.
 
+To be clear about whose bug this is: it was **mine**, not a shared flaw. I checked the deployed
+source of both rival vaults. SayTrade (`0xe210a588...`) guards slippage against `pool.observe()`
+TWAP exactly the way this vault does. Keel (`0x8980296B...`) uses a `spotOut()` that is
+documented as "after the pool fee, before price impact" — honest about what it does not model,
+and it never claims a cost figure. Neither computes a round-trip cost at all, so neither had a
+zero-cost path to get wrong. The bug existed because I chose to produce that number.
+
 The degenerate-input test earned its place. Quoting a **$50M** trade returned a round-trip
 cost of **0 bps** — "trading is free", the one answer a guardrail must never give, because it
 says yes. Root cause: the single-tick constant-liquidity model saturates at large sizes. I
