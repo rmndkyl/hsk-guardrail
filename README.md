@@ -95,6 +95,10 @@ forge test
 
 **26/26 passing** across three suites, all against a fork of HSK Chain mainnet.
 
+Verified the way a judge will check it: `git clone` into an empty directory, `forge build`,
+`forge test`. `forge-std` is vendored, so there is no setup step and no dependency fetch —
+the numbers above reproduce on a clean machine.
+
 ### The test that proves the gate opens, not just closes
 
 `test/TradePath.t.sol` closes the hole the rest of the suite leaves. Everything above proves

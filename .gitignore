@@ -1,7 +1,6 @@
 out/
 cache/
 broadcast/
-lib/
 data/
 __pycache__/
 *.pyc
