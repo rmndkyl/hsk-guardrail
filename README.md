@@ -90,10 +90,44 @@ property rather than a promise.
 ## Verified, not asserted
 
 ```
-forge test --match-path test/GuardrailFork.t.sol
+forge test
 ```
 
-**15/15 passing**, all against a fork of HSK Chain mainnet (block ~30,624,800).
+**17/17 passing** across two suites, all against a fork of HSK Chain mainnet.
+
+### The test that proves the gate opens, not just closes
+
+`test/TradePath.t.sol` closes the hole the rest of the suite leaves. Everything above proves
+the vault *refuses*, because this market genuinely offers no edge — which leaves an obvious
+question unanswered: is this a guardrail or just a wall?
+
+So the test manufactures the condition honestly, on a mainnet fork:
+
+1. Measure the gate before touching anything — gap **16 bp**, round-trip cost **59 bp**, so it
+   refuses.
+2. Push the pool price with a real $20k swap, creating a genuine spot-vs-TWAP gap.
+3. Measure again — gap **917 bp**, cost **69 bp**, so the gate opens.
+4. Fund the vault, call `trade()`, and assert the swap actually executed.
+
+Result: **1,124 WHSK received into the vault**, USDT fully spent, decision recorded as allowed
+with the spot and gap it saw. A second immediate trade is then refused on cooldown.
+
+```
+[PASS] test_tradeExecutesWhenMarketActuallyOffersEdge()
+  gap before push  : 16 bp     -> refused
+  gap after push   : 917 bp    -> allowed
+  WHSK received    : 1,124,308,799,497,265,664,423
+  vault WHSK after : 1124308799497265664423
+[PASS] test_tradePathRespectsCooldownAfterExecution()
+  second trade refused with reason: 3  (Cooldown)
+```
+
+That is the difference between a claim and a demonstration: the same contract that says no to
+a dead market says yes, and executes, when the market moves.
+
+### Suite detail
+
+`test/GuardrailFork.t.sol` — **15/15 passing** (block ~30,624,800).
 
 The tests worth reading:
 
@@ -207,10 +241,12 @@ balances. `QuoterV2` returns live quotes, which is the end-to-end proof it is th
 
 ## Honest limits
 
-- **The vault has not traded on mainnet.** Deploying costs $0.10 but there is no HSK in any of
-  my wallets, and the testnet faucet is gated behind reCAPTCHA Enterprise which I could not
-  pass. The gap between "15/15 fork tests pass" and "one real trade executed" is real and this
-  submission does not close it. The deploy script is written and costed.
+- **The vault has not traded on mainnet.** Deploying costs 1.25 HSK (~$0.10) and I hold none:
+  I scanned all 55,114 EVM addresses in my wallet vault and every one has a zero HSK balance, and
+  the testnet faucet is gated behind reCAPTCHA Enterprise. What *is* proven is that the trade path
+  executes correctly on a mainnet fork (`test/TradePath.t.sol`, 1,124 WHSK received). The deploy
+  script is written and costed. Note the event rules require mainnet deployment only for teams
+  selected for the demo, announced 4 Dec.
 - **Testnet is not usable for this.** HSK testnet (chainId 133) has no WHSK/USDT pool at all -
   `getPool` returns zero for every fee tier. Any demo on testnet would need a pool deployed
   first, which itself needs testnet gas.
