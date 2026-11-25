@@ -437,8 +437,8 @@ function renderLedger() {
 
 async function refresh(showError = true) {
   try {
-    const { market, twaps } = await readMarket();
-    cache = { market, twaps };
+    const { market, twaps, block } = await readMarket();
+    cache = { market, twaps, block };
     const d = evaluate(market, twaps, desk.notional, desk.claim, desk.margin);
     const m = d.measured;
 
@@ -475,10 +475,10 @@ async function refresh(showError = true) {
     $('clock').textContent = new Date().toISOString().slice(0, 19).replace('T', ' ') + ' UTC';
     // Let a sceptical reader verify the claim instead of trusting it: name the block
     // the numbers came from and link the pool on the explorer.
-    if (m.block) {
-      const blk = m.block.toLocaleString('en-US');
+    if (block) {
+      const blk = block.toLocaleString('en-US');
       $('proof').innerHTML = 'block <a class="blk" href="https://hsk.blockscout.com/block/' +
-        m.block + '" target="_blank" rel="noopener">' + blk + '</a> · ' +
+        block + '" target="_blank" rel="noopener">' + blk + '</a> · ' +
         '<a class="blk" href="https://hsk.blockscout.com/address/' + POOL +
         '?tab=read_contract" target="_blank" rel="noopener">pool on explorer</a>';
     }
