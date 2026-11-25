@@ -38,7 +38,8 @@ SCRIPT = [
     (4.5, "Try to trade anyway. Size and claim don't help.", "cmd:size 100"),
     (5.0, "", "cmd:claim 200"),
     (5.5, "Recorded on chain. Refusals are first-class evidence.", "cmd:decide"),
-    (5.0, "15/15 fork tests against HSK Chain mainnet", "scrollbottom"),
+    (5.0, "The adversarial suite found a real bug: 0bp cost at $50M", None),
+    (5.0, "26/26 fork tests, incl. one that proves the gate OPENS", "scrollbottom"),
     (4.5, "github.com/rmndkyl/hsk-guardrail", None),
 ]
 
