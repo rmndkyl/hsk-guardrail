@@ -115,8 +115,8 @@ contract GuardrailForkTest is Test {
         (uint256 costBps,) = vault.roundTripCostBps(10e6);
         if (marketEdge < costBps + MIN_EDGE) {
             // correct behaviour today: nothing is tradable
-            GuardrailVault.Decision memory d = vault.evaluate(10e6, marketEdge);
-            assertFalse(d.allowed);
+            GuardrailVault.Decision memory notTradable = vault.evaluate(10e6, marketEdge);
+            assertFalse(notTradable.allowed);
             return;
         }
         GuardrailVault.Decision memory d = vault.evaluate(10e6, marketEdge);

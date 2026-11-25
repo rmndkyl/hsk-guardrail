@@ -93,7 +93,7 @@ property rather than a promise.
 forge test
 ```
 
-**17/17 passing** across two suites, all against a fork of HSK Chain mainnet.
+**26/26 passing** across three suites, all against a fork of HSK Chain mainnet.
 
 ### The test that proves the gate opens, not just closes
 
@@ -124,6 +124,33 @@ with the spot and gap it saw. A second immediate trade is then refused on cooldo
 
 That is the difference between a claim and a demonstration: the same contract that says no to
 a dead market says yes, and executes, when the market moves.
+
+### Adversarial suite found a real bug
+
+`test/Adversarial.t.sol` attacks the vault: overclaimed edge, cap bypass, a hostile router
+address, privilege escalation, five separate attempts by the owner to loosen a limit, a
+self-reported loss, pause, ledger tampering, and degenerate inputs.
+
+The degenerate-input test earned its place. Quoting a **$50M** trade returned a round-trip
+cost of **0 bps** — "trading is free", the one answer a guardrail must never give, because it
+says yes. Root cause: the single-tick constant-liquidity model saturates at large sizes. I
+measured where it breaks against the live pool:
+
+| Trade size | simulated price move | reported cost | model |
+|---|---|---|---|
+| $100 | 1.00x | 59.9 bp | valid |
+| $10,000 | 1.02x | 59.2 bp | valid |
+| $100,000 | 1.24x | 54.2 bp | valid |
+| $1,000,000 | 3.38x | 38.9 bp | **fiction** |
+| $50,000,000 | 119.8x | 30.3 bp | **fiction** |
+
+Fix: if the simulated price moves more than **2x**, the size is outside the model's validity
+and `roundTripCostBps` returns `type(uint256).max`, which `evaluate` surfaces as
+`BadPoolState` — a refusal, not a cheap trade. The `usdtBack >= usdtIn` case (a round trip that
+appears to make money) is also treated as unpriceable rather than as zero cost.
+
+This is the difference between a claim and a demonstration: the suite that was supposed to
+confirm the design instead found the one failure mode that would have mattered.
 
 ### Suite detail
 

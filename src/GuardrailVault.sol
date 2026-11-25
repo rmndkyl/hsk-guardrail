@@ -283,11 +283,31 @@ contract GuardrailVault {
         uint256 baseOut = _amountOut1For0(usdtIn, L, sp); // USDT -> WHSK, WHSK 18dp out
         if (baseOut == 0) return (type(uint256).max, type(uint256).max);
 
+        // The single-tick model stops being valid once the trade would drain the tick. An
+        // adversarial test (a $50M quote) found that at absurd sizes this function could
+        // return a round trip that *makes* money, and the `usdtBack >= usdtIn` branch below
+        // then reported 0 bps — i.e. "trading is free". That is the worst possible answer,
+        // because it says yes. Anything that big is unpriced, not cheap.
         // simulate the sell leg at the pool price we would then be at
         uint256 spAfter = sp + (usdtIn * (1 << 96)) / uint256(L);
+
+        // VALIDITY BOUND. A single-tick constant-liquidity model only holds while the price
+        // stays near the current tick. Measured on the live WHSK/USDT pool, the model tracks
+        // truth up to ~$100k (price moves 1.24x) and then saturates: at $1M it reports a 3.4x
+        // price move as costing 38.9 bps, and at $50M it reports 30.3 bps. Those numbers are
+        // fiction — cheaper than a $10 trade — and a guardrail that believed them would wave
+        // through a size the pool cannot possibly absorb.
+        //
+        // So: if the simulated price moves more than 2x, the size is outside the model. Refuse
+        // to price it. `type(uint256).max` propagates to `evaluate` as BadPoolState.
+        if (spAfter > sp * 2) return (type(uint256).max, type(uint256).max);
+
         uint256 usdtBack = _amountOut0For1(baseOut, L, uint160(spAfter));
 
-        if (usdtBack >= usdtIn) return (0, 0);
+        // A round trip can never be profitable. If the model says it is, something is wrong
+        // with the size, so refuse to price it rather than reporting a zero cost.
+        if (usdtBack >= usdtIn) return (type(uint256).max, type(uint256).max);
+
         uint256 loss = usdtIn - usdtBack;
         costBps = (loss * 10_000) / usdtIn;
 
